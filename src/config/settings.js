@@ -1,3 +1,4 @@
+
 export const settings = {
   scene: {
     background: 0x0b0628,
@@ -24,12 +25,28 @@ export const settings = {
   },
 
   player: {
-    radius: 1,
-    color: 0x3399ff,
+    position: [0, 0, 0],
+
+    speed: 20,
+
+    bodyRadius: 1,
+    headRadius: 0.55,
+
+    bodyColor: "#3399ff",
+    headColor: "#8fcaff",
+
     roughness: 0.35,
     metalness: 0.2,
-    speed: 20,
-    position: [0, 1, 0],
+
+    animation: {
+      bobbing: true,
+
+      idleAmplitude: 0.035,
+      idleFrequency: 2.5,
+
+      moveAmplitude: 0.15,
+      moveFrequency: 11,
+    },
   },
 
   lighting: {

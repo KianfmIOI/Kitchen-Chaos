@@ -8,6 +8,6 @@ export function createCamera(config) {
     config.far,
   );
   camera.position.set(...config.position);
-  camera.lookAt(0, 0, 0);
+  camera.lookAt(...config.target);
   return camera;
 }

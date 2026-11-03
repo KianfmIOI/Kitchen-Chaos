@@ -42,37 +42,49 @@ export function createPlayerMovement({ object, camera, config }) {
   window.addEventListener("blur", onBlur);
 
   // Called once per animation frame
-  function update(delta) {
-    const forwardInput = Number(keys.has("KeyW")) - Number(keys.has("KeyS"));
+  
+function update(delta) {
+  const forwardInput =
+    Number(keys.has("KeyW")) - Number(keys.has("KeyS"));
 
-    const rightInput = Number(keys.has("KeyD")) - Number(keys.has("KeyA"));
+  const rightInput =
+    Number(keys.has("KeyD")) - Number(keys.has("KeyA"));
 
-    if (forwardInput === 0 && rightInput === 0) return;
-
-    // Camera-relative horizontal direction
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-
-    if (forward.lengthSq() < 0.000001) return;
-
-    forward.normalize();
-
-    right.crossVectors(forward, worldUp).normalize();
-
-    // Combine both directions
-    direction.set(0, 0, 0);
-
-    direction.addScaledVector(forward, forwardInput);
-    direction.addScaledVector(right, rightInput);
-
-    // Prevent diagonal movement being faster
-    if (direction.lengthSq() > 1) {
-      direction.normalize();
-    }
-
-    // Move the actual object
-    object.position.addScaledVector(direction, config.speed * delta);
+  // No movement input
+  if (forwardInput === 0 && rightInput === 0) {
+    return false;
   }
+
+  // Camera-relative horizontal direction
+  camera.getWorldDirection(forward);
+  forward.y = 0;
+
+  if (forward.lengthSq() < 0.000001) {
+    return false;
+  }
+
+  forward.normalize();
+
+  right.crossVectors(forward, worldUp).normalize();
+
+  direction.set(0, 0, 0);
+
+  direction.addScaledVector(forward, forwardInput);
+  direction.addScaledVector(right, rightInput);
+
+  // Prevent diagonal movement being faster
+  if (direction.lengthSq() > 1) {
+    direction.normalize();
+  }
+
+  object.position.addScaledVector(
+    direction,
+    config.speed * delta
+  );
+
+  return true;
+}
+
 
   // Clean up event listeners when no longer needed
   function dispose() {
