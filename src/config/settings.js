@@ -1,4 +1,4 @@
-
+// to maintain variables easier
 export const settings = {
   scene: {
     background: 0x0b0628,
@@ -8,7 +8,7 @@ export const settings = {
     fov: 50,
     near: 0.1,
     far: 1000,
-    position: [0, 4, 30],
+    position: [0, 15, 10],
     target: [0, 1, 0],
   },
 
@@ -25,9 +25,10 @@ export const settings = {
   },
 
   player: {
-    position: [0, 0, 20],
+    position: [0, 0, 0],
 
-    speed: 20,
+    speed: 15,
+    rotationSpeed: 15,
 
     bodyRadius: 1,
     headRadius: 0.55,
@@ -41,11 +42,11 @@ export const settings = {
     animation: {
       bobbing: true,
 
-      idleAmplitude: 0.035,
+      idleAmplitude: 0.1,
       idleFrequency: 2.5,
 
       moveAmplitude: 0.15,
-      moveFrequency: 11,
+      moveFrequency: 15,
     },
   },
 

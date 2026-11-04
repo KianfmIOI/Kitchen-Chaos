@@ -1,13 +1,11 @@
 import * as THREE from "three";
-import { lerp } from "three/src/math/MathUtils.js";
 
 const MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD"]);
 
 export function createPlayerMovement({ object, camera, config }) {
-  // Private keyboard state
   const keys = new Set();
 
-  // Reusable vectors (avoid creating them every frame)
+  // Reusable vectors
   const forward = new THREE.Vector3();
   const right = new THREE.Vector3();
   const worldUp = new THREE.Vector3(0, 1, 0);
@@ -42,60 +40,76 @@ export function createPlayerMovement({ object, camera, config }) {
   window.addEventListener("keyup", onKeyUp);
   window.addEventListener("blur", onBlur);
 
-  // Called once per animation frame
-  
-function update(delta) {
-  const forwardInput =
-    Number(keys.has("KeyW")) - Number(keys.has("KeyS"));
+  // Remember the direction the player should face
+  let targetAngle = object.rotation.y;
 
-  const rightInput =
-    Number(keys.has("KeyD")) - Number(keys.has("KeyA"));
+  function update(delta) {
+    const forwardInput = Number(keys.has("KeyW")) - Number(keys.has("KeyS"));
 
-  // No movement input
-  if (forwardInput === 0 && rightInput === 0) {
-    return false;
+    const rightInput = Number(keys.has("KeyD")) - Number(keys.has("KeyA"));
+
+    // Track whether the player is actually moving
+    let isMoving = false;
+
+    // --------------------------------
+    // 1. MOVEMENT
+    // --------------------------------
+
+    if (forwardInput !== 0 || rightInput !== 0) {
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+
+      if (forward.lengthSq() > 0.000001) {
+        forward.normalize();
+
+        right.crossVectors(forward, worldUp).normalize();
+
+        direction.set(0, 0, 0);
+
+        direction.addScaledVector(forward, forwardInput);
+        direction.addScaledVector(right, rightInput);
+
+        if (direction.lengthSq() > 0) {
+          direction.normalize();
+
+          // Remember the direction we want to face
+          targetAngle = Math.atan2(direction.x, direction.z);
+
+          // Move the player
+          object.position.addScaledVector(direction, config.speed * delta);
+
+          isMoving = true;
+        }
+      }
+    }
+
+    // --------------------------------
+    // 2. ROTATION
+    // --------------------------------
+
+    // This runs EVERY frame, even without movement input.
+
+    const difference = Math.atan2(
+      Math.sin(targetAngle - object.rotation.y),
+      Math.cos(targetAngle - object.rotation.y),
+    );
+
+    object.rotation.y +=
+      difference * (1 - Math.exp(-config.rotationSpeed * delta));
+
+    // --------------------------------
+    // 3. RETURN MOVEMENT STATE
+    // --------------------------------
+
+    return isMoving;
   }
-
-  // Camera-relative horizontal direction
-  camera.getWorldDirection(forward);
-  forward.y = 0;
-
-  if (forward.lengthSq() < 0.000001) {
-    return false;
+  function getFacingDirection() {
+    return new THREE.Vector3(
+      Math.sin(object.rotation.y),
+      0,
+      Math.cos(object.rotation.y),
+    );
   }
-
-  forward.normalize();
-
-  right.crossVectors(forward, worldUp).normalize();
-
-  direction.set(0, 0, 0);
-
-  direction.addScaledVector(forward, forwardInput);
-  direction.addScaledVector(right, rightInput);
-
-  // Prevent diagonal movement being faster
-  if (direction.lengthSq() > 1) {
-    direction.normalize();
-  }
-
-  // function for smooth rotation
-  
-  // rotate the body to face the movement direction
-  const angle = Math.atan2(direction.x, direction.z);
-  object.rotation.y = (angle);
-
-
-  // move the player
-  object.position.addScaledVector(
-    direction,
-    config.speed * delta
-  );
-
-  return true;
-}
-
-
-  // Clean up event listeners when no longer needed
   function dispose() {
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("keyup", onKeyUp);
@@ -104,5 +118,5 @@ function update(delta) {
     keys.clear();
   }
 
-  return { update, dispose };
+  return { update, dispose, getFacingDirection };
 }

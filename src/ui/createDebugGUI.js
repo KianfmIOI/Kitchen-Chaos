@@ -1,18 +1,10 @@
-
 import GUI from "lil-gui";
 
-export function createDebugGUI({
-  settings,
-  camera,
-  controls,
-  player,
-}) {
-
+export function createDebugGUI({ settings, camera, controls, player }) {
   // Create the GUI
   const gui = new GUI({
     title: "Kitchen Chaos",
   });
-
 
   // -------------------------
   // PLAYER FOLDER
@@ -20,9 +12,11 @@ export function createDebugGUI({
 
   const playerFolder = gui.addFolder("Player");
 
+  playerFolder.add(settings.player, "speed", 0, 50, 1).name("Movement Speed");
+
   playerFolder
-    .add(settings.player, "speed", 0, 50, 1)
-    .name("Movement Speed");
+    .add(settings.player, "rotationSpeed", 1, 20, 0.5)
+    .name("Rotation Speed");
 
   playerFolder
     .addColor(settings.player, "bodyColor")
@@ -37,7 +31,6 @@ export function createDebugGUI({
     .onChange((value) => {
       player.head.material.color.set(value);
     });
-
 
   // -------------------------
   // ANIMATION FOLDER
@@ -64,7 +57,6 @@ export function createDebugGUI({
   animationFolder
     .add(settings.player.animation, "moveFrequency", 0, 20, 0.1)
     .name("Walking Frequency");
-
 
   // -------------------------
   // CAMERA FOLDER
@@ -96,25 +88,17 @@ export function createDebugGUI({
     .name("Z")
     .onChange(() => controls.update());
 
-
   // -------------------------
   // CAMERA TARGET FOLDER
   // -------------------------
 
   const targetFolder = cameraFolder.addFolder("Target");
 
-  targetFolder
-    .add(controls.target, "x", -20, 20, 1)
-    .name("X");
+  targetFolder.add(controls.target, "x", -20, 20, 1).name("X");
 
-  targetFolder
-    .add(controls.target, "y", 0, 20, 1)
-    .name("Y");
+  targetFolder.add(controls.target, "y", 0, 20, 1).name("Y");
 
-  targetFolder
-    .add(controls.target, "z", -20, 20, 1)
-    .name("Z");
-
+  targetFolder.add(controls.target, "z", -20, 20, 1).name("Z");
 
   // Return GUI instance
   return gui;
