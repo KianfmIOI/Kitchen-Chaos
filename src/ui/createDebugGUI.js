@@ -82,17 +82,17 @@ export function createDebugGUI({
   const positionFolder = cameraFolder.addFolder("Position");
 
   positionFolder
-    .add(camera.position, "x", -50, 50, 1)
+    .add(camera.position, "x", -50, 50, 0.1)
     .name("X")
     .onChange(() => controls.update());
 
   positionFolder
-    .add(camera.position, "y", 0, 60, 1)
+    .add(camera.position, "y", 0, 60, 0.1)
     .name("Y")
     .onChange(() => controls.update());
 
   positionFolder
-    .add(camera.position, "z", -50, 50, 1)
+    .add(camera.position, "z", -50, 50, 0.1)
     .name("Z")
     .onChange(() => controls.update());
 

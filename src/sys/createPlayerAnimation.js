@@ -27,9 +27,6 @@ export function createPlayerAnimation({ head, config, headBaseY }) {
 
     head.position.y = headBaseY + bob;
 
-    // Small rotation for extra personality
-    head.rotation.z = Math.sin(elapsedTime * frequency) *
-      (isMoving ? 0.08 : 0.02);
   }
 
   return { update };

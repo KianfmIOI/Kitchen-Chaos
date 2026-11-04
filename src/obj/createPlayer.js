@@ -63,7 +63,7 @@ export function createPlayer(config) {
   // Eyes material
 const eyeMaterial = new THREE.MeshStandardMaterial({
   color: 0x080808,
-  roughness: 0.3,
+  roughness: 0,
 });
 
 // Eye geometry

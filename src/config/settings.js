@@ -5,10 +5,10 @@ export const settings = {
   },
 
   camera: {
-    fov: 30,
+    fov: 50,
     near: 0.1,
     far: 1000,
-    position: [0, 30, 30],
+    position: [0, 4, 30],
     target: [0, 1, 0],
   },
 
@@ -19,13 +19,13 @@ export const settings = {
   },
 
   ground: {
-    size: 200,
+    size: 50,
     divisions: 50,
     color: 0x182235,
   },
 
   player: {
-    position: [0, 0, 0],
+    position: [0, 0, 20],
 
     speed: 20,
 

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { lerp } from "three/src/math/MathUtils.js";
 
 const MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD"]);
 
@@ -77,6 +78,14 @@ function update(delta) {
     direction.normalize();
   }
 
+  // function for smooth rotation
+  
+  // rotate the body to face the movement direction
+  const angle = Math.atan2(direction.x, direction.z);
+  object.rotation.y = (angle);
+
+
+  // move the player
   object.position.addScaledVector(
     direction,
     config.speed * delta
