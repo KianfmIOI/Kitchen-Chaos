@@ -15,14 +15,17 @@ import { createLights } from "./world/createLights.js";
 
 // Objects
 import { createPlayer } from "./obj/createPlayer.js";
+import { createBox } from "./obj/createBox.js";
 
 // Systems
 import { createPlayerMovement } from "./sys/createPlayerMovement.js";
 import { createPlayerAnimation } from "./sys/createPlayerAnimation.js";
+import { createInteraction } from "./sys/createInteraction.js";
 import { setupResizeHandler } from "./sys/resizeHandler.js";
 
 // UI
 import { createDebugGUI } from "./ui/createDebugGUI.js";
+import { color } from "three/tsl";
 
 // -------------------------
 // 1. CORE
@@ -108,6 +111,31 @@ const removeResizeHandler = setupResizeHandler(
 // 8. TIMER
 // -------------------------
 
+// -------------------------
+// 8. Interaction System test
+// -------------------------
+const interactables = new Set();
+
+const box = createBox({
+  position: { x: 0, y: 1, z: 3 },
+});
+
+scene.add(box);
+interactables.add(box);
+const box1 = createBox({
+  position: { x: 3, y: 1, z: 1 },
+  color: 0x00ff00,
+});
+
+scene.add(box1);
+interactables.add(box1);
+const interaction = createInteraction({
+  player: player,
+  playerMovement: playerMovement,
+  intersectables: interactables,
+  config: settings.interaction,
+});
+
 const timer = new THREE.Timer();
 
 timer.connect(document);
@@ -125,6 +153,8 @@ window.addEventListener(
 
     playerMovement.dispose();
 
+    interaction.dispose();
+
     controls.dispose();
 
     gui.destroy();
@@ -135,82 +165,7 @@ window.addEventListener(
   },
   { once: true },
 );
-// -------------------------
-// 11. object interaction
-// -------------------------
-let selectedObject = null;
-let isHoldingItem = false;
-let intersectables = [];
 
-const PICKUP_RANGE = 2;
-const HOLD_DISTANCE = 2; // how far in front the item floats
-const HOLD_HEIGHT = 1.0;
-
-const boxGeo = new THREE.BoxGeometry();
-const boxMat = new THREE.MeshStandardMaterial({
-  color: 0xffa500,
-});
-const box = new THREE.Mesh(boxGeo, boxMat);
-box.position.set(2, 0.5, 0);
-scene.add(box);
-intersectables.push(box);
-
-const raycaster = new THREE.Raycaster();
-window.addEventListener("keydown", (e) => {
-  if (e.code !== "KeyE" || e.repeat) return; // ignore auto-repeat
-
-  if (isHoldingItem) dropItem();
-  else tryPickUp();
-});
-function tryPickUp() {
-  const origin = player.group.position.clone();
-  origin.y += 1;
-
-  const direction = playerMovement.getFacingDirection().clone().normalize();
-  raycaster.set(origin, direction);
-  raycaster.far = PICKUP_RANGE;
-
-  const hits = raycaster.intersectObjects(intersectables, true);
-
-  if (hits.length === 0) return;
-
-  // hits[0].object may be a child mesh -> walk up to the root we track
-  let obj = hits[0].object;
-  while (obj && !intersectables.includes(obj)) obj = obj.parent;
-  if (!obj) return;
-
-  pickUp(obj);
-}
-function pickUp(obj) {
-  selectedObject = obj;
-  isHoldingItem = true;
-
-  // Kill any tilt so it looks like it's being "carried"
-  obj.rotation.set(0, 0, 0);
-  // Position is updated every frame in your animate loop (see below)
-}
-function dropItem() {
-  const obj = selectedObject;
-  if (!obj) {
-    isHoldingItem = false;
-    return;
-  }
-
-  const dir = playerMovement.getFacingDirection().clone().setY(0).normalize();
-  const dropPos = player.group.position
-    .clone()
-    .addScaledVector(dir, HOLD_DISTANCE);
-
-  // Sit it on the floor: y = half its height (assuming ground is y = 0)
-  const bbox = new THREE.Box3().setFromObject(obj);
-  dropPos.y = (bbox.max.y - bbox.min.y) / 2;
-
-  obj.position.copy(dropPos);
-  obj.rotation.set(0, 0, 0);
-
-  selectedObject = null;
-  isHoldingItem = false;
-}
 
 // -------------------------
 // 9. ANIMATION LOOP
@@ -228,15 +183,9 @@ renderer.setAnimationLoop((timestamp) => {
   playerAnimation.update(delta, isMoving);
 
   // Camera
-  controls.update();
-  // item carrying
-  if (isHoldingItem && selectedObject) {
-    const dir = playerMovement.getFacingDirection().clone().setY(0).normalize();
-    selectedObject.position
-      .copy(player.group.position)
-      .addScaledVector(dir, HOLD_DISTANCE);
-    selectedObject.position.y = HOLD_HEIGHT;
-  }
+  //controls.update();
+
+  interaction.update();
 
   // Rendering
   renderer.render(scene, camera);

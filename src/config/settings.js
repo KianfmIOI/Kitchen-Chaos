@@ -56,4 +56,14 @@ export const settings = {
     shadowMapSize: 2048,
     shadowExtent: 20,
   },
+
+  // testing modular interaction system
+  interaction: {
+
+ pickUpRange :2,
+ holdDistance : 1.5, 
+ holdHeight : 2,
+
+
+  }
 };
