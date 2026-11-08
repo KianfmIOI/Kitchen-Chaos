@@ -16,6 +16,7 @@ import { createLights } from "./world/createLights.js";
 // Objects
 import { createPlayer } from "./obj/createPlayer.js";
 import { createBox } from "./obj/createBox.js";
+import { createBoundingBox } from "./obj/createBoundingBox.js";
 
 // Systems
 import { createPlayerMovement } from "./sys/createPlayerMovement.js";
@@ -89,12 +90,15 @@ const playerAnimation = createPlayerAnimation({
 // -------------------------
 // 6. DEVELOPER GUI
 // -------------------------
-
+const boundingBoxes = settings.bBoxes.map(config =>
+    createBoundingBox(scene, config)
+);
 const gui = createDebugGUI({
   settings,
   camera,
   controls,
   player,
+  boundingBoxes,
 });
 
 // -------------------------
@@ -135,6 +139,9 @@ const interaction = createInteraction({
   intersectables: interactables,
   config: settings.interaction,
 });
+
+
+
 
 const timer = new THREE.Timer();
 

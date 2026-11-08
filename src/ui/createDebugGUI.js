@@ -1,6 +1,6 @@
 import GUI from "lil-gui";
 
-export function createDebugGUI({ settings, camera, controls, player }) {
+export function createDebugGUI({ settings, camera, controls, player, boundingBoxes }) {
   // Create the GUI
   const gui = new GUI({
     title: "Kitchen Chaos",
@@ -99,6 +99,54 @@ export function createDebugGUI({ settings, camera, controls, player }) {
   targetFolder.add(controls.target, "y", 0, 20, 1).name("Y");
 
   targetFolder.add(controls.target, "z", -20, 20, 1).name("Z");
+
+
+// -------------------------
+// BOUNDING BOXES FOLDER
+// -------------------------
+
+const BBF = gui.addFolder("BBOX");
+
+boundingBoxes.forEach((bbox, index) => {
+
+    const config = settings.bBoxes[index];
+
+    const folder = BBF.addFolder(config.name);
+    // Color
+    folder.addColor(config, "color")
+        .name("Color")
+        .onChange(value => bbox.helper.material.color.set(value));
+    // MIN
+    const minFolder = folder.addFolder("Min");
+
+    minFolder.add(config.min, "x", -10, 10, 0.1)
+        .onChange(value => bbox.box.min.x = value);
+
+    minFolder.add(config.min, "y", -10, 10, 0.1)
+        .onChange(value => bbox.box.min.y = value);
+
+    minFolder.add(config.min, "z", -10, 10, 0.1)
+        .onChange(value => bbox.box.min.z = value);
+
+    // MAX
+    const maxFolder = folder.addFolder("Max");
+
+    maxFolder.add(config.max, "x", -10, 10, 0.1)
+        .onChange(value => bbox.box.max.x = value);
+
+    maxFolder.add(config.max, "y", -10, 10, 0.1)
+        .onChange(value => bbox.box.max.y = value);
+
+    maxFolder.add(config.max, "z", -10, 10, 0.1)
+        .onChange(value => bbox.box.max.z = value);
+
+    // VISIBILITY
+    folder.add(config, "visible")
+        .name("Show Bounding Box")
+        .onChange(value => bbox.helper.visible = value);
+
+});
+
 
   // Return GUI instance
   return gui;

@@ -65,5 +65,24 @@ export const settings = {
  holdHeight : 2,
 
 
-  }
+  },
+
+  //test bboxes
+  bBoxes: [
+    {
+        name: "Counter 1",
+        min: { x: -8, y: 0.5, z: -9 },
+        max: { x: 6, y: 3, z: -6 },
+        color: 0x00ff00,
+        visible: true,
+    },
+
+    {
+        name: "Counter 2",
+        min: { x: -8, y: 0.5, z: 3 },
+        max: { x: 6, y: 3, z: 5 },
+        color: 0xff0000,
+        visible: true,
+    }
+]
 };
