@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 
 export function createPlayer(config) {
   // Main container
@@ -103,11 +102,33 @@ export function createPlayer(config) {
   group.add(body);
   group.add(head);
 
+  // let's make a visualizer for the player's movement radius
+  const circleGeo = new THREE.BufferGeometry()
+  const points =[]
+  const segments = 32
+
+  for(let i = 0; i<segments;i++){
+    const angle = (i/segments) * Math.PI*2;
+    points.push(
+      new THREE.Vector3
+      (
+        Math.cos(angle)*config.movementRadius,
+        0.03,
+        Math.sin(angle)*config.movementRadius
+      )
+    )
+  }
+  circleGeo.setFromPoints(points)
+  const circleMat = new THREE.LineBasicMaterial({color:0x00ff0f})
+  const movementCircle = new THREE.LineLoop(circleGeo,circleMat)
+  movementCircle.userData.radius = config.movementRadius;
+  group.add(movementCircle)
   // Return everything we might need
   return {
     group,
     body,
     head,
     headBaseY,
+    movementCircle,
   };
 }

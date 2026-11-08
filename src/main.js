@@ -12,21 +12,20 @@ import { createOrbitControls } from "./core/createOrbitControls.js";
 // World
 import { createGround } from "./world/createGround.js";
 import { createLights } from "./world/createLights.js";
-
+import { createBoundingBox } from "./obj/createBoundingBox.js";
 // Objects
 import { createPlayer } from "./obj/createPlayer.js";
 import { createBox } from "./obj/createBox.js";
-import { createBoundingBox } from "./obj/createBoundingBox.js";
 
 // Systems
 import { createPlayerMovement } from "./sys/createPlayerMovement.js";
+import { createMovementCheck } from "./sys/createMovementCheck.js";
 import { createPlayerAnimation } from "./sys/createPlayerAnimation.js";
 import { createInteraction } from "./sys/createInteraction.js";
 import { setupResizeHandler } from "./sys/resizeHandler.js";
 
 // UI
 import { createDebugGUI } from "./ui/createDebugGUI.js";
-import { color } from "three/tsl";
 
 // -------------------------
 // 1. CORE
@@ -60,7 +59,7 @@ controls.enabled = false;
 const ground = createGround(settings.ground);
 
 scene.add(ground);
-
+const bbox = createBoundingBox(scene, settings.movementArea)
 createLights(scene, settings.lighting);
 
 // -------------------------
@@ -74,11 +73,16 @@ scene.add(player.group);
 // -------------------------
 // 5. PLAYER SYSTEMS
 // -------------------------
+const movementCheck = createMovementCheck({
+    bounds: settings.movementArea
+});
 
 const playerMovement = createPlayerMovement({
   object: player.group,
   camera,
   config: settings.player,
+  movementCheck,
+  movementCircle: player.movementCircle
 });
 
 const playerAnimation = createPlayerAnimation({
@@ -90,15 +94,13 @@ const playerAnimation = createPlayerAnimation({
 // -------------------------
 // 6. DEVELOPER GUI
 // -------------------------
-const boundingBoxes = settings.bBoxes.map(config =>
-    createBoundingBox(scene, config)
-);
+
 const gui = createDebugGUI({
   settings,
   camera,
   controls,
   player,
-  boundingBoxes,
+  bbox
 });
 
 // -------------------------
@@ -110,10 +112,6 @@ const removeResizeHandler = setupResizeHandler(
   renderer,
   settings.renderer.maxPixelRatio,
 );
-
-// -------------------------
-// 8. TIMER
-// -------------------------
 
 // -------------------------
 // 8. Interaction System test
@@ -142,6 +140,10 @@ const interaction = createInteraction({
 
 
 
+
+// -------------------------
+// 8. TIMER
+// -------------------------
 
 const timer = new THREE.Timer();
 

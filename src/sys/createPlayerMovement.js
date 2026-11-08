@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 const MOVEMENT_KEYS = new Set(["KeyW", "KeyA", "KeyS", "KeyD"]);
 
-export function createPlayerMovement({ object, camera, config }) {
+export function createPlayerMovement({ object, camera, config, movementCheck, movementCircle  }) {
   const keys = new Set();
 
   // Reusable vectors
@@ -43,6 +43,9 @@ export function createPlayerMovement({ object, camera, config }) {
   // Remember the direction the player should face
   let targetAngle = object.rotation.y;
 
+  // vector for movement check
+  const nextPosition = new THREE.Vector3();
+
   function update(delta) {
     const forwardInput = Number(keys.has("KeyW")) - Number(keys.has("KeyS"));
 
@@ -76,9 +79,20 @@ export function createPlayerMovement({ object, camera, config }) {
           targetAngle = Math.atan2(direction.x, direction.z);
 
           // Move the player
-          object.position.addScaledVector(direction, config.speed * delta);
-
-          isMoving = true;
+          //object.position.addScaledVector(direction, config.speed * delta);
+          nextPosition.copy(object.position)
+          nextPosition.addScaledVector(direction,config.speed*delta)
+          const canMoveResults = movementCheck.canMove({
+            playerPos: nextPosition,
+            movementCircle
+          })
+          if(canMoveResults.x){
+            object.position.x = nextPosition.x
+          }
+          if(canMoveResults.z){
+            object.position.z = nextPosition.z
+          }
+          isMoving = canMoveResults.x || canMoveResults.z
         }
       }
     }

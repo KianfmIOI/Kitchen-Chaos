@@ -10,6 +10,7 @@ export function createBoundingBox(scene, settings) {
     const helper = new THREE.Box3Helper(box, settings.color);
 
     helper.visible = settings.visible;
+    helper.castShadow = true
 
     scene.add(helper);
 
