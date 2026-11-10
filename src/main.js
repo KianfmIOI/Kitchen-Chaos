@@ -1,17 +1,19 @@
 import "./style.css";
 import * as THREE from "three";
 
+// config
 import { settings } from "./config/settings.js";
+import { kitchenSettings } from "./config/kitchenSettings.js";
 
 // Core
 import { createScene } from "./core/createScene.js";
 import { createCamera } from "./core/createCamera.js";
 import { createRenderer } from "./core/createRenderer.js";
 import { createOrbitControls } from "./core/createOrbitControls.js";
-
 // World
 import { createGround } from "./world/createGround.js";
 import { createLights } from "./world/createLights.js";
+import { createKitchen } from "./world/createKitchen.js";
 import { createBoundingBox } from "./obj/createBoundingBox.js";
 // Objects
 import { createPlayer } from "./obj/createPlayer.js";
@@ -22,6 +24,7 @@ import { createPlayerMovement } from "./sys/createPlayerMovement.js";
 import { createMovementCheck } from "./sys/createMovementCheck.js";
 import { createPlayerAnimation } from "./sys/createPlayerAnimation.js";
 import { createInteraction } from "./sys/createInteraction.js";
+import { createHeartEffect } from "./sys/createHeartEffect.js";
 import { setupResizeHandler } from "./sys/resizeHandler.js";
 
 // UI
@@ -58,10 +61,16 @@ controls.enabled = false;
 
 const ground = createGround(settings.ground);
 
-scene.add(ground);
-const bbox = createBoundingBox(scene, settings.movementArea)
+scene.add(ground.group);
+const bbox = createBoundingBox(scene, settings.movementArea);
 createLights(scene, settings.lighting);
 
+const kitchen = createKitchen(kitchenSettings, settings.movementArea);
+
+scene.add(kitchen.group);
+
+// All interactable triggers
+const interactables = kitchen.interactables;
 // -------------------------
 // 4. PLAYER
 // -------------------------
@@ -74,7 +83,7 @@ scene.add(player.group);
 // 5. PLAYER SYSTEMS
 // -------------------------
 const movementCheck = createMovementCheck({
-    bounds: settings.movementArea
+  bounds: settings.movementArea,
 });
 
 const playerMovement = createPlayerMovement({
@@ -82,13 +91,20 @@ const playerMovement = createPlayerMovement({
   camera,
   config: settings.player,
   movementCheck,
-  movementCircle: player.movementCircle
+  movementCircle: player.movementCircle,
 });
 
 const playerAnimation = createPlayerAnimation({
   head: player.head,
   config: settings.player.animation,
   headBaseY: player.headBaseY,
+});
+
+// heart
+const heartEffect = createHeartEffect({
+  scene,
+  player: player.group,
+  config: settings.heartEffect,
 });
 
 // -------------------------
@@ -99,8 +115,11 @@ const gui = createDebugGUI({
   settings,
   camera,
   controls,
+  ground,
   player,
-  bbox
+  bbox,
+  kitchen,
+  kitchenSettings,
 });
 
 // -------------------------
@@ -114,32 +133,8 @@ const removeResizeHandler = setupResizeHandler(
 );
 
 // -------------------------
-// 8. Interaction System test
+// 8. KITCHEN
 // -------------------------
-const interactables = new Set();
-
-const box = createBox({
-  position: { x: 0, y: 1, z: 3 },
-});
-
-scene.add(box);
-interactables.add(box);
-const box1 = createBox({
-  position: { x: 3, y: 1, z: 1 },
-  color: 0x00ff00,
-});
-
-scene.add(box1);
-interactables.add(box1);
-const interaction = createInteraction({
-  player: player,
-  playerMovement: playerMovement,
-  intersectables: interactables,
-  config: settings.interaction,
-});
-
-
-
 
 // -------------------------
 // 8. TIMER
@@ -162,7 +157,7 @@ window.addEventListener(
 
     playerMovement.dispose();
 
-    interaction.dispose();
+    // interaction.dispose();
 
     controls.dispose();
 
@@ -170,11 +165,12 @@ window.addEventListener(
 
     renderer.dispose();
 
+    playerMovement.dispose();
+    heartEffect.dispose();
     removeResizeHandler();
   },
   { once: true },
 );
-
 
 // -------------------------
 // 9. ANIMATION LOOP
@@ -194,8 +190,13 @@ renderer.setAnimationLoop((timestamp) => {
   // Camera
   //controls.update();
 
-  interaction.update();
+  // interaction.update();
 
+  // Character animation
+  playerAnimation.update(delta, isMoving);
+
+  // Heart effect
+  heartEffect.update(delta);
   // Rendering
   renderer.render(scene, camera);
 });

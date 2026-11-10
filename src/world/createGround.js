@@ -3,13 +3,14 @@ import * as THREE from "three";
 export function createGround(config) {
   const group = new THREE.Group();
 
+  const mat = new THREE.MeshStandardMaterial({
+    color: config.color,
+    roughness: 0.85,
+    metalness: 0.03,
+  });
   const floor = new THREE.Mesh(
     new THREE.PlaneGeometry(config.size, config.size),
-    new THREE.MeshStandardMaterial({
-      color: config.color,
-      roughness: 0.85,
-      metalness: 0.03,
-    }),
+    mat,
   );
 
   floor.rotation.x = -Math.PI / 2;
@@ -21,5 +22,5 @@ export function createGround(config) {
 
   group.add(floor, grid);
 
-  return group;
+  return { group, mat };
 }

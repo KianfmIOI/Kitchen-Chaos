@@ -21,7 +21,7 @@ export const settings = {
   ground: {
     size: 50,
     divisions: 50,
-    color: 0x182235,
+    color: 0x8292b0,
   },
 
   player: {
@@ -32,7 +32,7 @@ export const settings = {
 
     bodyRadius: 1,
     headRadius: 0.55,
-    movementRadius: 1.1,
+    movementRadius: 0.8,
 
     bodyColor: "#3399ff",
     headColor: "#8fcaff",
@@ -60,20 +60,29 @@ export const settings = {
 
   // testing modular interaction system
   interaction: {
-
- pickUpRange :2,
- holdDistance : 1.5, 
- holdHeight : 2,
-
-
+    pickUpRange: 2,
+    holdDistance: 1.5,
+    holdHeight: 2,
   },
 
- 
   //movement area
-  movementArea:{
-    min:{x:-8,y:1,z:-6},
-    max:{x:8,y:3,z:6},
+  movementArea: {
+    min: { x: -8, y: 1, z: -6 },
+    max: { x: 8, y: 3, z: 6 },
     color: 0x00ff00,
-    visible:true
-  }
+    visible: true,
+  },
+  heartEffect: {
+    key: "KeyL",
+
+    width: 3,
+    height: 3,
+
+    spawnHeight: 6,
+
+    riseHeight: 2,
+    duration: 1.2,
+
+    enabled: true,
+  },
 };
