@@ -65,7 +65,7 @@ scene.add(ground.group);
 const bbox = createBoundingBox(scene, settings.movementArea);
 createLights(scene, settings.lighting);
 
-const kitchen = createKitchen(kitchenSettings, settings.movementArea);
+const kitchen = await createKitchen(kitchenSettings, settings.movementArea);
 
 scene.add(kitchen.group);
 
@@ -76,7 +76,6 @@ const interactables = kitchen.interactables;
 // -------------------------
 
 const player = createPlayer(settings.player);
-
 scene.add(player.group);
 
 // -------------------------
@@ -98,6 +97,15 @@ const playerAnimation = createPlayerAnimation({
   head: player.head,
   config: settings.player.animation,
   headBaseY: player.headBaseY,
+});
+
+// Interaction (counter triggers + loose items in the world)
+const interaction = createInteraction({
+  scene,
+  player,
+  playerMovement,
+  interactables,
+  config: settings.interaction,
 });
 
 // heart
@@ -157,7 +165,7 @@ window.addEventListener(
 
     playerMovement.dispose();
 
-    // interaction.dispose();
+    interaction.dispose();
 
     controls.dispose();
 
@@ -165,7 +173,6 @@ window.addEventListener(
 
     renderer.dispose();
 
-    playerMovement.dispose();
     heartEffect.dispose();
     removeResizeHandler();
   },
@@ -185,12 +192,10 @@ renderer.setAnimationLoop((timestamp) => {
   const isMoving = playerMovement.update(delta);
 
   // Character animation
-  playerAnimation.update(delta, isMoving);
-
   // Camera
   //controls.update();
 
-  // interaction.update();
+  interaction.update(delta);
 
   // Character animation
   playerAnimation.update(delta, isMoving);
