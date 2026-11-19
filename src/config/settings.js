@@ -60,9 +60,11 @@ export const settings = {
 
   // testing modular interaction system
   interaction: {
-    pickUpRange: 2,
+    pickUpRange: 3.2,
     holdDistance: 1.5,
-    holdHeight: 2,
+    holdHeight: 2.0,
+    dropDistance: 1.8,
+    cookDuration: 1.5,
   },
 
   //movement area

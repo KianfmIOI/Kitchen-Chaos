@@ -27,8 +27,8 @@ export const kitchenSettings = {
 
     geometry: {
       width: 2,
-      height: 1.2,
-      depth: 1.2,
+      height: 2,
+      depth: 2,
     },
 
     trigger: {
@@ -60,53 +60,71 @@ export const kitchenSettings = {
     },
   },
 
-  // Every counter in the kitchen
+  // Counter layout. Spawners share the back row.
   counters: [
-    // BACK SIDE (-Z)
     {
-      id: "filler_01",
-      type: "filler",
-      position: { x: -5, z: -6.6 },
-      interactable: false,
+      id: "spawner_tomato",
+      type: "spawner",
+      item: "tomato",
+      position: { x: -4.8, z: -6.6 },
+      interactable: true,
+      interactionType: "spawn",
     },
     {
-      id: "spawner_01",
+      id: "spawner_onion",
       type: "spawner",
+      item: "onion",
+      position: { x: -2.4, z: -6.6 },
+      interactable: true,
+      interactionType: "spawn",
+    },
+    {
+      id: "spawner_cheese",
+      type: "spawner",
+      item: "cheese",
       position: { x: 0, z: -6.6 },
       interactable: true,
       interactionType: "spawn",
-      item: "tomato",
     },
     {
-      id: "filler_02",
-      type: "filler",
-      position: { x: 5, z: -6.6 },
-      interactable: false,
+      id: "spawner_burger",
+      type: "spawner",
+      item: "burger",
+      position: { x: 2.4, z: -6.6 },
+      interactable: true,
+      interactionType: "spawn",
+    },
+    {
+      id: "spawner_bread",
+      type: "spawner",
+      item: "bread",
+      position: { x: 4.8, z: -6.6 },
+      interactable: true,
+      interactionType: "spawn",
     },
 
-    // FRONT SIDE (+Z)
-    {
-      id: "filler_03",
-      type: "filler",
-      position: { x: -5, z: 6.6 },
-      interactable: false,
-    },
     {
       id: "chopping_01",
       type: "chopping",
-      position: { x: 0, z: 6.6 },
+      position: { x: -3, z: 6.6 },
       interactable: true,
       interactionType: "chop",
-      requiredTool: "knife",
-    },
-    {
-      id: "filler_04",
-      type: "filler",
-      position: { x: 5, z: 6.6 },
-      interactable: false,
     },
 
-    // LEFT SIDE (-X)
+    {
+      id: "filler_03",
+      type: "filler",
+      position: { x: 0, z: 6.6 },
+      interactable: false,
+    },
+    {
+      id: "frying_01",
+      type: "frying",
+      position: { x: 3, z: 6.6 },
+      interactable: true,
+      interactionType: "fry",
+    },
+
     {
       id: "filler_05",
       type: "filler",
@@ -120,7 +138,7 @@ export const kitchenSettings = {
       position: { x: -9.2, z: 0 },
       rotation: Math.PI / 2,
       interactable: true,
-      interactionType: "place_plate",
+      interactionType: "plate",
     },
     {
       id: "filler_06",
@@ -130,7 +148,6 @@ export const kitchenSettings = {
       interactable: false,
     },
 
-    // RIGHT SIDE (+X)
     {
       id: "filler_07",
       type: "filler",
