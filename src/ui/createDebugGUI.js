@@ -9,6 +9,7 @@ export function createDebugGUI({
   bbox,
   kitchen,
   kitchenSettings,
+  sun,
 }) {
   // Create the GUI
   const gui = new GUI({
@@ -43,6 +44,42 @@ export function createDebugGUI({
     });
 
   gui.close();
+
+  const sunFolder = gui.addFolder("Lighting");
+
+  const sunPositionFolder = sunFolder.addFolder("Position");
+
+  sunPositionFolder
+    .add(settings.lighting.position, "x", -30, 30, 0.5)
+    .name("X")
+    .onChange((value) => {
+      sun.position.x = value;
+    });
+
+  sunPositionFolder
+    .add(settings.lighting.position, "y", 1, 40, 0.5)
+    .name("Y")
+    .onChange((value) => {
+      sun.position.y = value;
+    });
+
+  sunPositionFolder
+    .add(settings.lighting.position, "z", -30, 30, 0.5)
+    .name("Z")
+    .onChange((value) => {
+      sun.position.z = value;
+    });
+
+  sunFolder
+    .add(settings.lighting, "directionalIntensity", 0, 5, 0.1)
+    .name("Sun Intensity")
+    .onChange((value) => {
+      sun.intensity = value;
+    });
+
+  sunFolder
+    .add(settings.lighting, "hemisphereIntensity", 0, 3, 0.1)
+    .name("Ambient Intensity");
   // -------------------------
   // PLAYER FOLDER
   // -------------------------

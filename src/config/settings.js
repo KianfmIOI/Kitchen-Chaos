@@ -14,7 +14,7 @@ export const settings = {
 
   renderer: {
     antialias: true,
-    maxPixelRatio: 1,
+    maxPixelRatio: 1.5,
     shadows: true,
   },
 
@@ -52,10 +52,15 @@ export const settings = {
   },
 
   lighting: {
-    hemisphereIntensity: 1.2,
-    directionalIntensity: 2.5,
+    hemisphereIntensity: 1.1,
+    directionalIntensity: 2.0,
     shadowMapSize: 2048,
-    shadowExtent: 20,
+    shadowExtent: 15,
+    position: {
+      x: -8,
+      y: 18,
+      z: 8,
+    },
   },
 
   // testing modular interaction system

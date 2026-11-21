@@ -9,9 +9,10 @@ export function createLights(scene, config, showHelpers = false) {
 
   const sun = new THREE.DirectionalLight(0xffffff, config.directionalIntensity);
 
-  sun.position.set(-8, 15, 10);
+  sun.position.set(config.position.x, config.position.y, config.position.z);
   sun.castShadow = true;
-
+  sun.shadow.bias = -0.01;
+  sun.shadow.normalBias = 0.02;
   sun.shadow.mapSize.set(config.shadowMapSize, config.shadowMapSize);
 
   const extent = config.shadowExtent;

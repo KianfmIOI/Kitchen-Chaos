@@ -20,7 +20,6 @@ import { createPlayer } from "./obj/createPlayer.js";
 import { createBox } from "./obj/createBox.js";
 import { preloadModels } from "./obj/modelLoader.js";
 
-
 // Systems
 import { createPlayerMovement } from "./sys/createPlayerMovement.js";
 import { createMovementCheck } from "./sys/createMovementCheck.js";
@@ -65,7 +64,9 @@ const ground = createGround(settings.ground);
 
 scene.add(ground.group);
 const bbox = createBoundingBox(scene, settings.movementArea);
-createLights(scene, settings.lighting);
+
+const light = createLights(scene, settings.lighting);
+scene.add(light);
 
 await preloadModels();
 const kitchen = await createKitchen(kitchenSettings, settings.movementArea);
@@ -131,6 +132,7 @@ const gui = createDebugGUI({
   bbox,
   kitchen,
   kitchenSettings,
+  sun: light.sun,
 });
 
 // -------------------------
