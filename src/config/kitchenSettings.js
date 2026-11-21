@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 export const kitchenSettings = {
   debug: {
-    showTriggers: true,
+    showTriggers: false,
   },
   // Kitchen-wide settings
   layout: {
@@ -21,6 +21,7 @@ export const kitchenSettings = {
 
   // Default counter appearance
   defaultCounter: {
+      model: "counter",
     color: 0xffa500,
     roughness: 0.7,
     metalness: 0,
@@ -41,6 +42,7 @@ export const kitchenSettings = {
 
   // Special trash counter appearance
   trashCounter: {
+      model: "trashBin",
     color: 0x151515,
     roughness: 0.85,
     metalness: 0,
@@ -71,9 +73,9 @@ export const kitchenSettings = {
       interactionType: "spawn",
     },
     {
-      id: "spawner_onion",
+      id: "spawner_lettuce",
       type: "spawner",
-      item: "onion",
+      item: "lettuce",
       position: { x: -2.4, z: -6.6 },
       interactable: true,
       interactionType: "spawn",
@@ -120,6 +122,7 @@ export const kitchenSettings = {
     {
       id: "frying_01",
       type: "frying",
+        model: "fryingCounter",
       position: { x: 3, z: 6.6 },
       interactable: true,
       interactionType: "fry",

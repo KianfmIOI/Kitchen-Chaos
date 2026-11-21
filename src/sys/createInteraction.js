@@ -1,5 +1,11 @@
 import * as THREE from "three";
-import { createKitchenItem, createPlateGroup } from "../world/createKitchen.js";
+import { createKitchenItem, createPlateGroup, PLATE_Y, PAN_SURFACE_Y } from "../world/createKitchen.js";
+import { createModel } from "../obj/modelLoader.js";
+import { ITEM_MODEL_SIZE } from "../config/modelSettings.js";
+
+// Item type -> model to show once it has been chopped.
+// Types without an entry (e.g. lettuce) only change their label.
+const CHOPPED_MODEL = { tomato: "tomatoChopped" };
 
 export function createInteraction({ scene, player, playerMovement, interactables = new Set(), config }) {
   let heldItem = null;
@@ -26,6 +32,8 @@ export function createInteraction({ scene, player, playerMovement, interactables
     return target instanceof HTMLElement &&
       (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
   }
+
+  // ---------------------------------------------------------------- targeting
 
   function findTarget() {
     const origin = player.group.position.clone();
@@ -56,6 +64,8 @@ export function createInteraction({ scene, player, playerMovement, interactables
     }
     return best;
   }
+
+  // ------------------------------------------------------------ item visuals
 
   // Remove the floating label once an item becomes part of a plate.
   // The item remains the same object; only its label resources are removed.
@@ -91,6 +101,31 @@ export function createInteraction({ scene, player, playerMovement, interactables
     if (old) old.dispose();
   }
 
+  // Swap the 3D model of an item (e.g. tomato -> chopped tomato).
+  // Pick-up meshes are re-registered only if the old ones were registered.
+  // Geometry and materials are shared with the model cache, so nothing is disposed here.
+  function setItemModel(item, modelKey) {
+    const oldModel = item.userData.model;
+    if (!oldModel) return;
+
+    let wasInteractable = false;
+    oldModel.traverse((child) => {
+      if (interactables.delete(child)) wasInteractable = true;
+    });
+    item.remove(oldModel);
+
+    const model = createModel(modelKey, { targetSize: ITEM_MODEL_SIZE });
+    item.add(model);
+    model.traverse((child) => {
+      if (!child.isMesh) return;
+      child.userData.itemRoot = item;
+      if (wasInteractable) interactables.add(child);
+    });
+    item.userData.model = model;
+  }
+
+  // ------------------------------------------------------------ holding items
+
   function pickUp(item, kind = "item") {
     heldItem = item;
     heldKind = kind;
@@ -101,12 +136,6 @@ export function createInteraction({ scene, player, playerMovement, interactables
   function removeInteractables(root) {
     root.traverse((child) => {
       if (child.isMesh) interactables.delete(child);
-    });
-  }
-
-  function addInteractables(root) {
-    root.traverse((child) => {
-      if (child.isMesh && child.userData.itemRoot) interactables.add(child);
     });
   }
 
@@ -122,11 +151,11 @@ export function createInteraction({ scene, player, playerMovement, interactables
     if (counterType === "trash") return true;
     if (heldKind === "plate") return false;
     const type = item.userData.itemType;
-    if (counterType === "chopping") return ["tomato", "onion"].includes(type) && !item.userData.chopped;
+    if (counterType === "chopping") return ["tomato", "lettuce"].includes(type) && !item.userData.chopped;
     if (counterType === "frying") return type === "burger" && !item.userData.cooked && !item.userData.cooking;
     if (counterType === "plate") {
       if (type === "burger") return item.userData.cooked;
-      return ["tomato", "onion", "cheese", "bread"].includes(type);
+      return ["tomato", "lettuce", "cheese", "bread"].includes(type);
     }
     return false;
   }
@@ -139,9 +168,12 @@ export function createInteraction({ scene, player, playerMovement, interactables
       : "";
   }
 
+  // ------------------------------------------------------- counter interaction
+
   function interactWithCounter(counter) {
     const type = counter.userData.type;
 
+    // ---- Empty hands: take something from the counter.
     if (!heldItem) {
       if (type === "spawner") {
         const forward = playerMovement.getFacingDirection().clone().setY(0).normalize();
@@ -156,13 +188,23 @@ export function createInteraction({ scene, player, playerMovement, interactables
         // The old plate (with its contents) is now being carried.
         // Create a complete replacement plate, not just an empty Group.
         counter.userData.plateGroup = createPlateGroup();
-        counter.userData.plateGroup.position.set(0, 2.06, 0);
+        counter.userData.plateGroup.position.set(0, PLATE_Y, 0);
         counter.add(counter.userData.plateGroup);
         platePanel.style.display = "none";
+      } else if (type === "frying") {
+        // The burger sits above the player's pick-up rays, so it is taken
+        // through the counter (the trigger box the rays actually hit).
+        const item = counter.userData.fryingItem;
+        if (!item?.userData.cooked) return; // pan empty, or still cooking
+        counter.userData.fryingItem = null;
+        const progress = counter.userData.cookProgress;
+        if (progress) progress.sprite.visible = false;
+        pickUp(item);
       }
       return;
     }
 
+    // ---- Holding something: put it on the counter.
     if (!canPlace(heldItem, type)) return;
 
     if (type === "trash") {
@@ -171,14 +213,19 @@ export function createInteraction({ scene, player, playerMovement, interactables
     }
 
     if (type === "chopping") {
-      heldItem.userData.chopped = true;
-      heldItem.userData.tags.push("chopped");
-      heldItem.userData.displayName = `Chopped ${heldItem.userData.itemType}`;
-      setItemLabel(heldItem);
+      const item = heldItem;
+      item.userData.chopped = true;
+      item.userData.tags.push("chopped");
+      item.userData.displayName = `Chopped ${item.userData.itemType}`;
+      setItemLabel(item);
+
+      const choppedModel = CHOPPED_MODEL[item.userData.itemType];
+      if (choppedModel) setItemModel(item, choppedModel);
       return;
     }
 
     if (type === "frying") {
+      if (counter.userData.fryingItem) return; // pan already in use
       const item = heldItem;
       item.userData.cooking = true;
       item.userData.cookRemaining = config.cookDuration;
@@ -189,9 +236,10 @@ export function createInteraction({ scene, player, playerMovement, interactables
       // Put the burger on the pan and make it unavailable until cooking ends.
       removeInteractables(item);
       counter.attach(item);
-      item.position.set(0, 2.2, 0);
+      item.position.set(0, PAN_SURFACE_Y, 0);
       item.rotation.set(0, 0, 0);
       cookingItems.set(item, counter);
+      counter.userData.fryingItem = item;
 
       heldItem = null;
       heldKind = "item";
@@ -232,6 +280,8 @@ export function createInteraction({ scene, player, playerMovement, interactables
   }
 
   window.addEventListener("keydown", onKeyDown);
+
+  // ------------------------------------------------------------------ cooking
 
   function drawProgress(counter, item) {
     const progress = counter.userData.cookProgress;
@@ -274,8 +324,8 @@ export function createInteraction({ scene, player, playerMovement, interactables
         item.userData.displayName = "Fried burger";
         setItemLabel(item);
 
-        // It can now be picked up from the frying counter.
-        addInteractables(item);
+        // Stays on the pan until the player takes it (see the "frying" branch
+        // in interactWithCounter), so it is not added back to interactables.
         drawProgress(fryingCounter, item);
         cookingItems.delete(item);
       }

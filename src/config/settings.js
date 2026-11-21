@@ -14,7 +14,7 @@ export const settings = {
 
   renderer: {
     antialias: true,
-    maxPixelRatio: 2,
+    maxPixelRatio: 1,
     shadows: true,
   },
 
@@ -72,7 +72,7 @@ export const settings = {
     min: { x: -8, y: 1, z: -6 },
     max: { x: 8, y: 3, z: 6 },
     color: 0x00ff00,
-    visible: true,
+    visible: false,
   },
   heartEffect: {
     key: "KeyL",

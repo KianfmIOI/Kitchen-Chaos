@@ -1,6 +1,21 @@
 import * as THREE from "three";
-import { createCounterMesh } from "../obj/createCounterMesh.js";
-import { loadCounterMesh } from "../obj/loadCounterMesh.js";
+import { createModel } from "../obj/modelLoader.js";
+import { ITEM_MODEL_SIZE } from "../config/modelSettings.js";
+
+// Heights (in the counter's local space) where things rest. They depend on your
+// counter models: if something floats or sinks, tune these numbers.
+// createInteraction.js imports them, so there is a single source of truth.
+export const PLATE_Y = 2.0; // plate on the plate counter
+export const PAN_SURFACE_Y = 2.1; // burger on the frying counter
+
+// Item type -> key in modelSettings.js (modelFiles).
+const MODEL_FOR = {
+  tomato: "tomato",
+  lettuce: "lettuce",
+  cheese: "cheese",
+  burger: "burger",
+  bread: "bread",
+};
 
 function makeLabel(text, color = "#ffffff") {
   const canvas = document.createElement("canvas");
@@ -16,7 +31,6 @@ function makeLabel(text, color = "#ffffff") {
 
   // Add padding around the text
   const horizontalPadding = 80;
-  const verticalPadding = 50;
 
   // Calculate canvas dimensions
   canvas.width = Math.ceil(textWidth + horizontalPadding * 2);
@@ -66,13 +80,12 @@ function makeLabel(text, color = "#ffffff") {
 
   return sprite;
 }
-const ITEM_COLORS = {
-  tomato: 0xe53935,
-  onion: 0xd8c5a2,
-  cheese: 0xffd43b,
-  burger: 0x79502b,
-  bread: 0xd99a45,
-};
+
+function createItemModel(itemType) {
+  const key = MODEL_FOR[itemType];
+  if (!key) throw new Error(`No model defined for item type "${itemType}" (see MODEL_FOR in createKitchen.js)`);
+  return createModel(key, { targetSize: ITEM_MODEL_SIZE });
+}
 
 export function createKitchenItem(
   scene,
@@ -82,18 +95,11 @@ export function createKitchenItem(
 ) {
   const group = new THREE.Group();
   group.name = `item_${itemType}`;
-  const color = ITEM_COLORS[itemType] ?? 0xaaaaaa;
-  const geometry =
-    itemType === "tomato"
-      ? new THREE.SphereGeometry(0.38, 20, 16)
-      : new THREE.BoxGeometry(0.65, 0.55, 0.65);
-  const mesh = new THREE.Mesh(
-    geometry,
-    new THREE.MeshStandardMaterial({ color, roughness: 0.7 }),
-  );
-  mesh.castShadow = true;
-  mesh.position.y = 0.32;
-  group.add(mesh);
+
+  // The model's bottom sits at the group's origin.
+  const model = createItemModel(itemType);
+  group.add(model);
+
   const label = makeLabel(itemType);
   label.position.y = 1.05;
   group.add(label);
@@ -107,24 +113,24 @@ export function createKitchenItem(
     cooked: false,
     cooking: false,
     label,
+    model, // createInteraction swaps this when the item changes (e.g. chopped)
   };
-  mesh.userData.itemRoot = group;
+
+  // Every mesh of the model must point back to the item, so picking works.
+  model.traverse((child) => {
+    if (!child.isMesh) return;
+    child.userData.itemRoot = group;
+    interactables.add(child);
+  });
+
   scene.add(group);
-  interactables.add(mesh);
   return group;
 }
 
 export function createPlateGroup() {
   const plateGroup = new THREE.Group();
   plateGroup.name = "plate_with_contents";
-
-  const plate = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.72, 0.62, 0.12, 32),
-    new THREE.MeshStandardMaterial({ color: 0xf4f1e8, roughness: 0.35 }),
-  );
-  plate.receiveShadow = true;
-  plateGroup.add(plate);
-
+  plateGroup.add(createModel("plate", { targetSize: 1.4 }));
   return plateGroup;
 }
 
@@ -134,15 +140,17 @@ export async function createKitchen(config) {
   const interactables = new Set();
   const counters = [];
 
-  async function createCounter(counterConfig) {
+  function createCounter(counterConfig) {
     const counter = new THREE.Group();
     counter.name = counterConfig.id;
+
+    // Trash uses its own look; any counter can override the model in kitchenSettings.
     const isTrash = counterConfig.type === "trash";
     const visualConfig = isTrash ? config.trashCounter : config.defaultCounter;
-    const mesh = isTrash
-      ? createCounterMesh(visualConfig)
-      : await loadCounterMesh(visualConfig);
+    const modelKey = counterConfig.model ?? visualConfig.model;
+    const mesh = createModel(modelKey, { targetHeight: visualConfig.geometry.height });
     counter.add(mesh);
+
     counter.userData = {
       id: counterConfig.id,
       type: counterConfig.type,
@@ -150,9 +158,10 @@ export async function createKitchen(config) {
       interactionType: counterConfig.interactionType ?? null,
       item: counterConfig.item ?? null,
       plateItems: [],
+      fryingItem: null, // the burger currently on this counter's pan
     };
 
-    // A visible counter-type label and a simple item placeholder on spawners.
+    // A visible counter-type label.
     if (counterConfig.type !== "filler") {
       const counterLabel = makeLabel(
         counterConfig.type === "spawner"
@@ -162,35 +171,23 @@ export async function createKitchen(config) {
       counterLabel.position.set(0, 2.65, 0);
       counter.add(counterLabel);
     }
+
+    // Spawners show the item they hand out, resting on the counter top.
     if (counterConfig.type === "spawner") {
-      const placeholder = new THREE.Mesh(
-        new THREE.BoxGeometry(0.65, 0.65, 0.65),
-        new THREE.MeshStandardMaterial({
-          color: ITEM_COLORS[counterConfig.item] ?? 0xffffff,
-        }),
-      );
-      placeholder.position.set(0, 2.0, 0);
-      placeholder.castShadow = true;
-      counter.add(placeholder);
+      const display = createItemModel(counterConfig.item);
+      display.position.y = visualConfig.geometry.height;
+      counter.add(display);
     }
+
     if (counterConfig.type === "plate") {
       const plateGroup = createPlateGroup();
-      plateGroup.position.set(0, 2.06, 0);
+      plateGroup.position.set(0, PLATE_Y, 0);
       counter.add(plateGroup);
       counter.userData.plateGroup = plateGroup;
     }
-    if (counterConfig.type === "frying") {
-      const pan = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.62, 0.62, 0.12, 32),
-        new THREE.MeshStandardMaterial({
-          color: 0x292929,
-          metalness: 0.45,
-          roughness: 0.35,
-        }),
-      );
-      pan.position.y = 2.08;
-      counter.add(pan);
 
+    // The pan is part of the frying counter model. Only the progress bar is added here.
+    if (counterConfig.type === "frying") {
       const progressCanvas = document.createElement("canvas");
       progressCanvas.width = 512;
       progressCanvas.height = 100;
@@ -203,7 +200,8 @@ export async function createKitchen(config) {
         }),
       );
       progress.scale.set(2.1, 0.42, 1);
-      progress.position.set(0, 2.85, 0);
+      progress.position.set(0, 3.8, 0); // above the burger's label
+      progress.renderOrder = 10;
       progress.visible = false;
       counter.add(progress);
       counter.userData.cookProgress = {
@@ -237,6 +235,6 @@ export async function createKitchen(config) {
     counters.push({ group: counter, mesh, trigger });
   }
 
-  for (const item of config.counters) await createCounter(item);
+  for (const item of config.counters) createCounter(item);
   return { group: kitchen, counters, interactables };
 }

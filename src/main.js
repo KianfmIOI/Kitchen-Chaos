@@ -18,6 +18,8 @@ import { createBoundingBox } from "./obj/createBoundingBox.js";
 // Objects
 import { createPlayer } from "./obj/createPlayer.js";
 import { createBox } from "./obj/createBox.js";
+import { preloadModels } from "./obj/modelLoader.js";
+
 
 // Systems
 import { createPlayerMovement } from "./sys/createPlayerMovement.js";
@@ -65,6 +67,7 @@ scene.add(ground.group);
 const bbox = createBoundingBox(scene, settings.movementArea);
 createLights(scene, settings.lighting);
 
+await preloadModels();
 const kitchen = await createKitchen(kitchenSettings, settings.movementArea);
 
 scene.add(kitchen.group);
